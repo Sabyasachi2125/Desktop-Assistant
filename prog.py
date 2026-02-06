@@ -106,69 +106,130 @@ def handle_weather_command():
     """
     Handle weather information requests.
     Uses a free weather API to get current weather data.
+    Includes retry mechanism for failed requests.
     """
-    try:
-        city = input("Enter city name: ").strip()
-        if not city:
-            print("Please enter a valid city name.")
-            return
+    max_retries = 3
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            city = input("Enter city name: ").strip()
+            if not city:
+                print("Please enter a valid city name.")
+                retry_count += 1
+                if retry_count < max_retries:
+                    print(f"Attempt {retry_count + 1}/{max_retries}. Please try again.")
+                    continue
+                else:
+                    print("Maximum attempts reached. Returning to main menu.")
+                    return
             
-        # Using OpenWeatherMap API (free tier)
-        # Note: In a real implementation, you'd use a proper API key
-        api_key = "YOUR_API_KEY_HERE"  # Users need to get their own free API key
-        url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
-        
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            temp = data['main']['temp']
-            description = data['weather'][0]['description']
-            humidity = data['main']['humidity']
+            # Using OpenWeatherMap API (free tier)
+            # Note: In a real implementation, you'd use a proper API key
+            api_key = "YOUR_API_KEY_HERE"  # Users need to get their own free API key
+            url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
             
-            weather_info = f"Current weather in {city}: {description}, Temperature: {temp}°C, Humidity: {humidity}%"
-            print(weather_info)
-            pyttsx3.speak(weather_info)
-        else:
-            error_msg = "Sorry, couldn't fetch weather data. Please check the city name or try again later."
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                temp = data['main']['temp']
+                description = data['weather'][0]['description']
+                humidity = data['main']['humidity']
+                
+                weather_info = f"Current weather in {city}: {description}, Temperature: {temp}°C, Humidity: {humidity}%"
+                print(weather_info)
+                pyttsx3.speak(weather_info)
+                return  # Success - exit the function
+            else:
+                error_msg = f"Sorry, couldn't fetch weather data for {city}. Status code: {response.status_code}"
+                print(error_msg)
+                pyttsx3.speak("Weather data not available for that city")
+                retry_count += 1
+                
+                if retry_count < max_retries:
+                    print(f"Attempt {retry_count}/{max_retries}. Please try another city or check the spelling.")
+                    continue
+                else:
+                    print("Maximum attempts reached. Returning to main menu.")
+                    return
+                    
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Network error: {str(e)}. Please check your internet connection."
             print(error_msg)
-            pyttsx3.speak(error_msg)
+            pyttsx3.speak("Network error occurred")
+            retry_count += 1
             
-    except requests.exceptions.RequestException:
-        error_msg = "Network error. Please check your internet connection."
-        print(error_msg)
-        pyttsx3.speak(error_msg)
-    except Exception as e:
-        error_msg = f"Error fetching weather: {str(e)}"
-        print(error_msg)
-        pyttsx3.speak(error_msg)
+            if retry_count < max_retries:
+                print(f"Attempt {retry_count}/{max_retries}. Please try again.")
+                continue
+            else:
+                print("Maximum attempts reached. Returning to main menu.")
+                return
+                
+        except Exception as e:
+            error_msg = f"Error fetching weather: {str(e)}"
+            print(error_msg)
+            pyttsx3.speak("Error occurred while fetching weather")
+            retry_count += 1
+            
+            if retry_count < max_retries:
+                print(f"Attempt {retry_count}/{max_retries}. Please try again.")
+                continue
+            else:
+                print("Maximum attempts reached. Returning to main menu.")
+                return
+    
+    # If we get here, all retries failed
+    print("Unable to fetch weather information after multiple attempts.")
+    pyttsx3.speak("Unable to fetch weather information")
 
 def handle_system_monitor():
     """
     Handle system monitoring requests.
     Shows CPU usage, memory usage, and other system information.
+    Includes retry mechanism for system monitoring.
     """
-    try:
-        # Get system information
-        cpu_percent = psutil.cpu_percent(interval=1)
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
-        
-        # Format information
-        info = f"""
+    max_retries = 2
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            # Get system information
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            
+            # Handle potential disk access issues
+            try:
+                disk = psutil.disk_usage('/')
+            except:
+                # Fallback for disk usage if root path fails
+                disk = psutil.disk_usage(os.getcwd())
+            
+            # Format information
+            info = f"""
 System Information:
 CPU Usage: {cpu_percent}%
 Memory Usage: {memory.percent}% ({memory.used // (1024**3)}GB / {memory.total // (1024**3)}GB)
 Available Memory: {memory.available // (1024**3)}GB
 Disk Usage: {disk.percent}% ({disk.used // (1024**3)}GB / {disk.total // (1024**3)}GB)
-        """.strip()
-        
-        print(info)
-        pyttsx3.speak(f"CPU usage is {cpu_percent} percent. Memory usage is {memory.percent} percent.")
-        
-    except Exception as e:
-        error_msg = f"Error getting system information: {str(e)}"
-        print(error_msg)
-        pyttsx3.speak(error_msg)
+            """.strip()
+            
+            print(info)
+            pyttsx3.speak(f"CPU usage is {cpu_percent} percent. Memory usage is {memory.percent} percent.")
+            return  # Success - exit the function
+            
+        except Exception as e:
+            error_msg = f"Error getting system information: {str(e)}"
+            print(error_msg)
+            pyttsx3.speak("Error occurred while getting system information")
+            retry_count += 1
+            
+            if retry_count < max_retries:
+                print(f"Attempt {retry_count}/{max_retries}. Retrying system monitoring...")
+                continue
+            else:
+                print("Unable to retrieve system information after multiple attempts.")
+                return
 
 def handle_file_operations(user_input):
     """
