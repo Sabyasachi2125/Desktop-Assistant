@@ -158,6 +158,15 @@ User: "temperature in London"
 Assistant: Shows weather information for London
 ```
 
+**Weather API Setup:**
+To use weather functionality, you need a free API key:
+1. Go to https://openweathermap.org/api
+2. Sign up for a free account
+3. Get your API key
+4. Edit `prog.py` and replace `YOUR_API_KEY_HERE` in the configuration section with your actual API key
+
+**Note:** Without a valid API key, weather commands will show setup instructions.
+
 #### File Operations
 ```
 User: "create file"

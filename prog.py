@@ -20,6 +20,10 @@ Author: IIEC RISE Community
 Mentor: Mr. Vimal Daga (World Record Holder)
 """
 
+# === CONFIGURATION SECTION ===
+# Weather API Configuration
+OPENWEATHER_API_KEY = "YOUR_API_KEY_HERE"  # Get free key from https://openweathermap.org/api
+
 import os
 import sys
 import pyttsx3
@@ -111,6 +115,21 @@ def handle_weather_command():
     max_retries = 3
     retry_count = 0
     
+    # Check for API key setup
+    if OPENWEATHER_API_KEY == "YOUR_API_KEY_HERE":
+        print("⚠️  Weather API Setup Required!")
+        print("To use weather functionality, you need a free API key from OpenWeatherMap:")
+        print("1. Go to https://openweathermap.org/api")
+        print("2. Sign up for a free account")
+        print("3. Get your API key")
+        print("4. Replace 'YOUR_API_KEY_HERE' in the configuration section with your actual API key")
+        print("")
+        print("Alternatively, you can:")
+        print("- Use a different weather service")
+        print("- Implement a mock weather feature for testing")
+        print("")
+        return
+    
     while retry_count < max_retries:
         try:
             city = input("Enter city name: ").strip()
@@ -125,9 +144,7 @@ def handle_weather_command():
                     return
             
             # Using OpenWeatherMap API (free tier)
-            # Note: In a real implementation, you'd use a proper API key
-            api_key = "YOUR_API_KEY_HERE"  # Users need to get their own free API key
-            url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+            url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPENWEATHER_API_KEY}&units=metric"
             
             response = requests.get(url, timeout=10)
             if response.status_code == 200:
@@ -140,6 +157,12 @@ def handle_weather_command():
                 print(weather_info)
                 pyttsx3.speak(weather_info)
                 return  # Success - exit the function
+            elif response.status_code == 401:
+                print("❌ API Authentication Error!")
+                print("Your API key is invalid or not configured properly.")
+                print("Please check your OpenWeatherMap API key setup.")
+                print("")
+                return  # Don't retry on authentication errors
             else:
                 error_msg = f"Sorry, couldn't fetch weather data for {city}. Status code: {response.status_code}"
                 print(error_msg)
