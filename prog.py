@@ -22,7 +22,7 @@ Mentor: Mr. Vimal Daga (World Record Holder)
 
 # === CONFIGURATION SECTION ===
 # Weather API Configuration
-OPENWEATHER_API_KEY = "YOUR_API_KEY_HERE"  # Get free key from https://openweathermap.org/api
+OPENWEATHER_API_KEY = "f7aa9fb00264ba48cb390da79f4eaed7"  # Your OpenWeatherMap API key
 
 import os
 import sys
