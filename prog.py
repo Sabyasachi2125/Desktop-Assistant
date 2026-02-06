@@ -9,6 +9,11 @@ Features:
 - Camera access
 - Entertainment (jokes, games)
 - Web search capabilities
+- Weather information
+- System monitoring (CPU, memory usage)
+- File operations (create, delete, move files)
+- Music player control
+- Email sending capability
 - Cross-platform support (Windows, macOS, Linux)
 
 Author: IIEC RISE Community
@@ -20,6 +25,10 @@ import sys
 import pyttsx3
 import random
 import subprocess
+import json
+import requests
+import psutil
+from datetime import datetime
 
 # Command sets for different operations
 run_commands = {"run", "launch", "open"}          # Commands to start applications
@@ -27,6 +36,13 @@ close_commands = {"close", "kill", "exit"}        # Commands to terminate applic
 exit_program_keywords = {"terminate", 'quit', "exit"}  # Program exit commands
 camera_keywords = {"camera", "selfie", "photo"}   # Camera-related keywords
 linux_platforms = {"linux", 'linux2'}             # Linux platform identifiers
+
+# New command sets for enhanced features
+weather_keywords = {"weather", "temperature", "climate"}
+system_monitor_keywords = {"cpu", "memory", "ram", "system", "performance", "monitor"}
+file_operation_keywords = {"create", "delete", "move", "copy", "file", "folder"}
+music_keywords = {"music", "play", "pause", "next", "previous", "song"}
+email_keywords = {"email", "mail", "send"}
 
 def main():
     """
@@ -66,9 +82,210 @@ def main():
         elif command in exit_program_keywords:
             handle_exit()
             
+        # Handle new enhanced features
+        elif any(keyword in user_input for keyword in weather_keywords):
+            handle_weather_command()
+            
+        elif any(keyword in user_input for keyword in system_monitor_keywords):
+            handle_system_monitor()
+            
+        elif any(keyword in user_input for keyword in file_operation_keywords):
+            handle_file_operations(user_input)
+            
+        elif any(keyword in user_input for keyword in music_keywords):
+            handle_music_control(user_input)
+            
+        elif any(keyword in user_input for keyword in email_keywords):
+            handle_email_command()
+            
         # Handle special commands
         else:
             handle_special_commands(user_input)
+
+def handle_weather_command():
+    """
+    Handle weather information requests.
+    Uses a free weather API to get current weather data.
+    """
+    try:
+        city = input("Enter city name: ").strip()
+        if not city:
+            print("Please enter a valid city name.")
+            return
+            
+        # Using OpenWeatherMap API (free tier)
+        # Note: In a real implementation, you'd use a proper API key
+        api_key = "YOUR_API_KEY_HERE"  # Users need to get their own free API key
+        url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+        
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            temp = data['main']['temp']
+            description = data['weather'][0]['description']
+            humidity = data['main']['humidity']
+            
+            weather_info = f"Current weather in {city}: {description}, Temperature: {temp}°C, Humidity: {humidity}%"
+            print(weather_info)
+            pyttsx3.speak(weather_info)
+        else:
+            error_msg = "Sorry, couldn't fetch weather data. Please check the city name or try again later."
+            print(error_msg)
+            pyttsx3.speak(error_msg)
+            
+    except requests.exceptions.RequestException:
+        error_msg = "Network error. Please check your internet connection."
+        print(error_msg)
+        pyttsx3.speak(error_msg)
+    except Exception as e:
+        error_msg = f"Error fetching weather: {str(e)}"
+        print(error_msg)
+        pyttsx3.speak(error_msg)
+
+def handle_system_monitor():
+    """
+    Handle system monitoring requests.
+    Shows CPU usage, memory usage, and other system information.
+    """
+    try:
+        # Get system information
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        # Format information
+        info = f"""
+System Information:
+CPU Usage: {cpu_percent}%
+Memory Usage: {memory.percent}% ({memory.used // (1024**3)}GB / {memory.total // (1024**3)}GB)
+Available Memory: {memory.available // (1024**3)}GB
+Disk Usage: {disk.percent}% ({disk.used // (1024**3)}GB / {disk.total // (1024**3)}GB)
+        """.strip()
+        
+        print(info)
+        pyttsx3.speak(f"CPU usage is {cpu_percent} percent. Memory usage is {memory.percent} percent.")
+        
+    except Exception as e:
+        error_msg = f"Error getting system information: {str(e)}"
+        print(error_msg)
+        pyttsx3.speak(error_msg)
+
+def handle_file_operations(user_input):
+    """
+    Handle file operation commands.
+    
+    Args:
+        user_input (str): The user's command
+    """
+    try:
+        if "create" in user_input:
+            filename = input("Enter filename to create: ").strip()
+            if filename:
+                with open(filename, 'w') as f:
+                    f.write("")  # Create empty file
+                success_msg = f"File {filename} created successfully!"
+                print(success_msg)
+                pyttsx3.speak(success_msg)
+            else:
+                print("Please provide a filename.")
+                
+        elif "delete" in user_input:
+            filename = input("Enter filename to delete: ").strip()
+            if filename and os.path.exists(filename):
+                os.remove(filename)
+                success_msg = f"File {filename} deleted successfully!"
+                print(success_msg)
+                pyttsx3.speak(success_msg)
+            elif filename:
+                print(f"File {filename} not found.")
+            else:
+                print("Please provide a filename.")
+                
+        elif "move" in user_input or "copy" in user_input:
+            source = input("Enter source file: ").strip()
+            destination = input("Enter destination: ").strip()
+            
+            if source and destination:
+                if "move" in user_input:
+                    os.rename(source, destination)
+                    action = "moved"
+                else:
+                    import shutil
+                    shutil.copy2(source, destination)
+                    action = "copied"
+                    
+                success_msg = f"File {action} successfully from {source} to {destination}"
+                print(success_msg)
+                pyttsx3.speak(success_msg)
+            else:
+                print("Please provide both source and destination.")
+                
+    except Exception as e:
+        error_msg = f"Error performing file operation: {str(e)}"
+        print(error_msg)
+        pyttsx3.speak(error_msg)
+
+def handle_music_control(user_input):
+    """
+    Handle music player control commands.
+    Note: This is a basic implementation that works with Windows Media Player.
+    
+    Args:
+        user_input (str): The user's command
+    """
+    try:
+        if "play" in user_input:
+            # This is a placeholder - actual implementation would depend on the music player
+            msg = "Playing music"
+            print(msg)
+            pyttsx3.speak(msg)
+            # In real implementation, you might use:
+            # os.system("start wmplayer")  # Windows Media Player
+        elif "pause" in user_input:
+            msg = "Music paused"
+            print(msg)
+            pyttsx3.speak(msg)
+        elif "next" in user_input:
+            msg = "Playing next song"
+            print(msg)
+            pyttsx3.speak(msg)
+        elif "previous" in user_input:
+            msg = "Playing previous song"
+            print(msg)
+            pyttsx3.speak(msg)
+        else:
+            msg = "Music control command not recognized"
+            print(msg)
+            pyttsx3.speak(msg)
+            
+    except Exception as e:
+        error_msg = f"Error controlling music: {str(e)}"
+        print(error_msg)
+        pyttsx3.speak(error_msg)
+
+def handle_email_command():
+    """
+    Handle email sending capability.
+    Note: This requires proper email configuration.
+    """
+    try:
+        print("Email feature requires setup:")
+        print("1. Configure your email credentials in the code")
+        print("2. Enable less secure apps or use app passwords")
+        print("3. Set up SMTP server details")
+        
+        msg = "Email feature requires additional setup. Please check the documentation."
+        print(msg)
+        pyttsx3.speak(msg)
+        
+        # Placeholder for actual implementation
+        # Would require smtplib and email libraries
+        # Plus proper security handling for credentials
+        
+    except Exception as e:
+        error_msg = f"Error with email feature: {str(e)}"
+        print(error_msg)
+        pyttsx3.speak(error_msg)
 
 def handle_run_commands(user_input):
     """

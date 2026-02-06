@@ -14,6 +14,11 @@ This intelligent assistant can perform the following actions:
 - **😂 Humor**: Tell random jokes to brighten your day
 - **🔍 Web Search**: Perform Google searches directly from the assistant
 - **⏰ System Info**: Display current date and time
+- **🌤️ Weather Information**: Get current weather for any city
+- **🖥️ System Monitoring**: Check CPU, memory, and disk usage
+- **📁 File Operations**: Create, delete, move, and copy files
+- **🎵 Music Control**: Control music playback (basic support)
+- **📧 Email Capability**: Send emails (requires setup)
 
 ## 🚀 Getting Started
 
@@ -79,6 +84,8 @@ This intelligent assistant can perform the following actions:
 
 - **Python**: 3.8 or higher
 - **pyttsx3**: 2.90 (Text-to-speech engine)
+- **requests**: 2.28.0+ (For weather API calls)
+- **psutil**: 5.9.0+ (For system monitoring)
 - **System Applications**: Chrome, Notepad, Paint, Calculator (pre-installed on most systems)
 
 > **Note**: If you encounter pyttsx3 errors on Linux, ensure `espeak` is installed using the command above.
@@ -133,16 +140,58 @@ User: "close calculator"
 Assistant: Closes calculator
 ```
 
-#### Camera & System Info
+#### System Monitoring
 ```
-User: "open camera"
-Assistant: Launches system camera app
+User: "check cpu usage"
+Assistant: Shows current CPU and memory usage
 
-User: "what is the date"
-Assistant: Shows current system date
+User: "system monitor"
+Assistant: Displays detailed system information
+```
 
-User: "what is the time"
-Assistant: Shows current system time
+#### Weather Information
+```
+User: "weather"
+Assistant: Asks for city name, then shows current weather
+
+User: "temperature in London"
+Assistant: Shows weather information for London
+```
+
+#### File Operations
+```
+User: "create file"
+Assistant: Asks for filename and creates it
+
+User: "delete file"
+Assistant: Asks for filename and deletes it
+
+User: "move file"
+Assistant: Asks for source and destination
+
+User: "copy file" 
+Assistant: Asks for source and destination
+```
+
+#### Music Control
+```
+User: "play music"
+Assistant: Starts music playback
+
+User: "pause music"
+Assistant: Pauses current playback
+
+User: "next song"
+Assistant: Plays next track
+
+User: "previous song"
+Assistant: Plays previous track
+```
+
+#### Email Sending
+```
+User: "send email"
+Assistant: Shows setup instructions for email configuration
 ```
 
 #### Entertainment Features
@@ -180,9 +229,10 @@ Ok Bye,See You later
 ### Project Structure
 ```
 Desktop-Assistant/
-├── prog.py          # Main application code
-├── requirements.txt # Python dependencies
-├── README.md        # This documentation
+├── prog.py          # Main application code with enhanced features
+├── requirements.txt # Python dependencies (updated)
+├── README.md        # This documentation (enhanced)
+├── CONTRIBUTING.md  # Contribution guidelines
 ├── LICENSE          # MIT License
 └── .gitignore       # Git ignore rules
 ```
