@@ -215,11 +215,25 @@ def handle_special_commands(user_input):
         # Game loop
         while True:
             try:
-                toss = input("Heads or Tails:")
+                user_input = input("Heads or Tails: ").strip().lower()
                 
-                # Validate input
-                if not toss or toss not in coins:
-                    raise ValueError() 
+                # Handle empty input
+                if not user_input:
+                    print("Please enter 'Heads' or 'Tails' (or 'H'/'T')")
+                    continue
+                
+                # Normalize user input to accepted format
+                valid_inputs = {
+                    'heads': 'Heads', 'head': 'Heads', 'h': 'Heads',
+                    'tails': 'Tails', 'tail': 'Tails', 't': 'Tails'
+                }
+                
+                if user_input not in valid_inputs:
+                    print(f"Invalid input '{user_input}'. Please enter 'Heads' or 'Tails' (or 'H'/'T')")
+                    continue
+                
+                # Convert to proper format
+                toss = valid_inputs[user_input]
                 
                 pyttsx3.speak(toss)
                 computer_choice = random.choice(coins)
